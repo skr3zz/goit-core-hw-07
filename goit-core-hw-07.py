@@ -253,7 +253,7 @@ def main():
                     print(f"Phone number for {name}: {book[name]}")
 
         elif command == "all":
-            print(show_all_contacts(book))
+            print(show_all(book))
 
         elif command == "add-birthday":
             print(add_birthday(args, book))
