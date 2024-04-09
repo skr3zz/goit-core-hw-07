@@ -134,8 +134,7 @@ def add_contact(args, book: AddressBook):
     if phone:
         record.add_phone(phone)
     return message
-
-
+    
 @input_error
 def change_contact(args, book: AddressBook):
     if len(args) < 2:
