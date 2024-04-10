@@ -92,14 +92,39 @@ class AddressBook(UserDict):
             days_ahead += 7  
         return d + timedelta(days=days_ahead)
 
-    def get_upcoming_birthdays(users):
-        prepared_users = [] 
-        for user in users: 
+    def get_upcoming_birthdays(users, find_next_weekday):
+        upcoming_birthdays = []
+        days = 7
+        today = datetime.today().date()
+
+        def find_next_weekday(d, weekday):
+            days_ahead = weekday - d.weekday()
+            if days_ahead <= 0:
+                days_ahead += 7
+            return d + timedelta(days=days_ahead)
+
+        for user in users:
             try:
-                birthday = datetime.strptime(user['birthday'], '%Y.%m.%d').date()  
-                prepared_users.append({"name": user['name'], 'birthday': birthday})  
+                birthday = datetime.strptime(user['birthday'], '%Y.%m.%d').date()
+                birthday_this_year = birthday.replace(year=today.year)
+
+                if birthday_this_year < today:
+                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+
+                if 0 <= (birthday_this_year - today).days <= days:
+                    if birthday_this_year.weekday() >= 5:
+                        birthday_this_year = find_next_weekday(birthday_this_year, 0)
+
+                    congratulation_date_str = birthday_this_year.strftime('%Y.%m.%d')
+                    upcoming_birthdays.append({
+                        "name": user["name"],
+                        "congratulation_date": congratulation_date_str
+                    })
             except ValueError:
                 print(f'Некоректна дата народження для користувача {user["name"]}')
+
+
+    
     
     def show_all_contacts(book):
         if book.records:
@@ -137,7 +162,7 @@ def add_contact(args, book: AddressBook):
     
 @input_error
 def change_contact(args, book: AddressBook):
-    if len(args) < 2:
+    if len(args) < 3:
         return "Invalid command format. Use 'change [name] [new_phone]'"
     
     name, new_phone = args
