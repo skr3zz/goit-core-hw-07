@@ -1,4 +1,4 @@
-from collections import defaultdict, UserDict
+from collections import UserDict
 from datetime import datetime, timedelta
 
 
@@ -19,7 +19,7 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        super().__init__(value)  
+        super().__init__(value)
         self.__value = None
         self.value = value
 
@@ -76,32 +76,18 @@ class Record:
 
 
 class AddressBook(UserDict):
-    def add_record(self, record):
-        self.data[record.name.value] = record
-
-    def find(self, name):
-        return self.data.get(name)
-
-    def delete(self, name):
-        if name in self.data:
-            del self.data[name]
-
-    def find_next_weekday(d, weekday: int):  
-        days_ahead = weekday - d.weekday()  
-        if days_ahead <= 0:  
-            days_ahead += 7  
+    @staticmethod
+    def find_next_weekday(d, weekday: int):
+        days_ahead = weekday - d.weekday()
+        if days_ahead <= 0:
+            days_ahead += 7
         return d + timedelta(days=days_ahead)
 
+    @staticmethod
     def get_upcoming_birthdays(users, find_next_weekday):
         upcoming_birthdays = []
         days = 7
         today = datetime.today().date()
-
-        def find_next_weekday(d, weekday):
-            days_ahead = weekday - d.weekday()
-            if days_ahead <= 0:
-                days_ahead += 7
-            return d + timedelta(days=days_ahead)
 
         for user in users:
             try:
@@ -122,13 +108,24 @@ class AddressBook(UserDict):
                     })
             except ValueError:
                 print(f'Некоректна дата народження для користувача {user["name"]}')
+        return upcoming_birthdays
 
+    def birthdays(self, find_next_weekday):
+        return self.get_upcoming_birthdays(self.data.values(), find_next_weekday)
 
-    
-    
-    def show_all_contacts(book):
-        if book.records:
-            contacts_info = "\n".join([f"{record.name.value}: {', '.join([phone.value for phone in record.phones])}" for record in book.records])
+    def add_record(self, record):
+        self.data[record.name.value] = record
+
+    def find(self, name):
+        return self.data.get(name)
+
+    def delete(self, name):
+        if name in self.data:
+            del self.data[name]
+
+    def show_all_contacts(self):
+        if self.data:
+            contacts_info = "\n".join([f"{record.name.value}: {', '.join([phone.value for phone in record.phones])}" for record in self.data.values()])
             return f"All contacts:\n{contacts_info}"
         else:
             return "Address book is empty."
@@ -159,15 +156,16 @@ def add_contact(args, book: AddressBook):
     if phone:
         record.add_phone(phone)
     return message
-    
+
+
 @input_error
 def change_contact(args, book: AddressBook):
     if len(args) < 3:
         return "Invalid command format. Use 'change [name] [new_phone]'"
-    
+
     name, new_phone = args
     record = book.find(name)
-    
+
     if record:
         try:
             old_phone = record.phones[0].value
@@ -230,7 +228,7 @@ def show_birthday(args, book):
 
 @input_error
 def birthdays(args, book):
-    upcoming_birthdays = book.get_upcoming_birthdays()
+    upcoming_birthdays = book.birthdays(AddressBook.find_next_weekday)
     if upcoming_birthdays:
         return "Upcoming birthdays:\n" + "\n".join(
             [f"{record.name.value}: {record.birthday.date.strftime('%d.%m.%Y')}" for record in upcoming_birthdays]
@@ -290,6 +288,8 @@ def main():
 
         else:
             print("Invalid command.")
+
+
 
 if __name__ == "__main__":
     main()
