@@ -94,7 +94,7 @@ class AddressBook(UserDict):
 
         for user in users:
             try:
-                birthday = datetime.strptime(user.birthday.value, '%Y.%m.%d').date()
+                birthday = datetime.strptime(user.birthday.value, '%d.%m.%Y').date()
                 birthday_this_year = birthday.replace(year=today.year)
 
                 if birthday_this_year < today:
@@ -104,7 +104,7 @@ class AddressBook(UserDict):
                     if birthday_this_year.weekday() >= 5:
                         birthday_this_year = find_next_weekday(birthday_this_year, 0)
 
-                    congratulation_date_str = birthday_this_year.strftime('%Y.%m.%d')
+                    congratulation_date_str = birthday_this_year.strftime('%d.%m.%Y')
                     upcoming_birthdays.append({
                         "name": user.name.value,
                         "congratulation_date": congratulation_date_str
@@ -163,15 +163,14 @@ def add_contact(args, book: AddressBook):
 
 @input_error
 def change_contact(args, book: AddressBook):
-    if len(args) < 3:
-        return "Invalid command format. Use 'change [name] [new_phone]'"
+    if len(args) != 3:
+        return "Invalid command format. Use 'change [name] [old_phone] [new_phone]'"
 
-    name, new_phone = args
+    name, old_phone, new_phone = args
     record = book.find(name)
 
     if record:
         try:
-            old_phone = record.phones[0].value
             record.edit_phone(old_phone, new_phone)
             return f"Phone number updated for {name}"
         except ValueError:
@@ -234,7 +233,7 @@ def birthdays(args, book):
     upcoming_birthdays = book.birthdays(AddressBook.find_next_weekday)
     if upcoming_birthdays:
         return "Upcoming birthdays:\n" + "\n".join(
-            [f"{record.name.value}: {record.birthday.date.strftime('%d.%m.%Y')}" for record in upcoming_birthdays]
+            [f"{record['name']}: {record['congratulation_date']}" for record in upcoming_birthdays]
         )
     else:
         return "No upcoming birthdays."
