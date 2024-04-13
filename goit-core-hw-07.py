@@ -69,7 +69,10 @@ class Record:
         return None
 
     def add_birthday(self, birthday):
-        self.birthday = Birthday(birthday)
+        try:
+            self.birthday = Birthday(birthday)
+        except ValueError:
+            print(f'Некоректна дата народження для користувача {self.name.value}')
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
@@ -91,7 +94,7 @@ class AddressBook(UserDict):
 
         for user in users:
             try:
-                birthday = datetime.strptime(user['birthday'], '%Y.%m.%d').date()
+                birthday = datetime.strptime(user.birthday.value, '%Y.%m.%d').date()
                 birthday_this_year = birthday.replace(year=today.year)
 
                 if birthday_this_year < today:
@@ -103,11 +106,11 @@ class AddressBook(UserDict):
 
                     congratulation_date_str = birthday_this_year.strftime('%Y.%m.%d')
                     upcoming_birthdays.append({
-                        "name": user["name"],
+                        "name": user.name.value,
                         "congratulation_date": congratulation_date_str
                     })
             except ValueError:
-                print(f'Некоректна дата народження для користувача {user["name"]}')
+                print(f'Некоректна дата народження для користувача {user.name.value}')
         return upcoming_birthdays
 
     def birthdays(self, find_next_weekday):
